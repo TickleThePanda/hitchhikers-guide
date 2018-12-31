@@ -14,11 +14,11 @@ const text = [
 ];
 
 function isFullscreen() {
-  return !document.fullscreenElement && !document.mozFullScreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement;
+  return document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement && !document.msFullscreenElement;
 }
 
 function toggleFullScreen() {
-  if (isFullscreen()) {
+  if (!isFullscreen()) {
     if (document.documentElement.requestFullscreen) {
       document.documentElement.requestFullscreen();
     } else if (document.documentElement.msRequestFullscreen) {
@@ -78,6 +78,11 @@ function setText(newText) {
   resizeText();
 }
 
+function playCurrentItem() {
+  const newText = text[index];
+  responsiveVoice.speak(newText, 'UK English Male', { rate: 0.9 });
+}
+
 let status = "dontpanic";
 
 window.addEventListener('load', function() {
@@ -86,10 +91,13 @@ window.addEventListener('load', function() {
 
   fullscreenController.addEventListener('click', function(event) {
     toggleFullScreen();
+    if (status !== "dontpanic") {
+      playCurrentItem();
+    }
   });
 
   function handleStatusChange() {
-    if (!isFullscreen()) {
+    if (isFullscreen()) {
       fullscreenController.classList.add('hidden');
     } else {
       fullscreenController.classList.remove('hidden');
@@ -104,27 +112,34 @@ window.addEventListener('load', function() {
  
   const mainContainer = document.querySelector('#main-container');
 
-  mainContainer.addEventListener('click', function(e) {
 
+  function switchToNextItem() {
     responsiveVoice.CHARACTER_LIMIT = 1000;
 
     if (status === "dontpanic") {
-      const newText = text[index];
       
+      const newText = text[index];
+
       setText(newText);
       
-      const speechText = newText.split(/\. |, |; |\? |! /);
-      
-      responsiveVoice.speak(newText, 'UK English Male', { rate: 0.9 });
-      
       status = "speaking";
+
+      playCurrentItem();
       
-      index = (index + 1) % text.length;
   
     } else {
       setText();
       responsiveVoice.cancel();
+      index = (index + 1) % text.length;
       status = "dontpanic";
+    }
+
+  }
+
+  mainContainer.addEventListener('click', switchToNextItem);
+  document.addEventListener('keypress', function() {
+    if(isFullscreen()) {
+      switchToNextItem();
     }
   });
 
