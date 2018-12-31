@@ -93,6 +93,7 @@ window.addEventListener('load', function() {
       fullscreenController.classList.add('hidden');
     } else {
       fullscreenController.classList.remove('hidden');
+      responsiveVoice.cancel();
     }
     
   }
@@ -124,6 +125,12 @@ window.addEventListener('load', function() {
       setText();
       responsiveVoice.cancel();
       status = "dontpanic";
+    }
+  });
+
+  document.addEventListener('visibilitychange', function(e) {
+    if(document.hidden) {
+      responsiveVoice.cancel();
     }
   });
 });
